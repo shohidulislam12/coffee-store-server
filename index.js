@@ -30,6 +30,7 @@ async function run() {
     await client.connect();
     const coffeeCollection = client.db("coffeeDB");
     const coffee = coffeeCollection.collection("coffee");
+    const userCollection=client.db("coffeeDB").collection("users");
     app.get("/coffee",async (req,res)=>{
         const cursor = coffee.find();
         const result=await cursor.toArray()
@@ -48,6 +49,41 @@ app.delete("/coffee/:id",async(req,res)=>{
     const result = await coffee.deleteOne(query);
     res.send(result)
 })
+//user related Api 
+ app.post('/users',async(req,res)=>{
+  const newUser=req.body
+
+  const result = await userCollection.insertOne(newUser);
+  res.send(result)
+ })
+//read user api
+app.get('/users',async(req,res)=>{
+  const cursor=userCollection.find()
+  const result=await cursor.toArray()
+  res.send(result)
+})
+//delete app
+app.delete('/users/:id',async(req,res)=>{
+  const id=req.params.id
+  const query={_id:new ObjectId(id)}
+  const result=await userCollection.deleteOne(query)
+  res.json(result)
+})
+//
+app.patch('/users',async(req,res)=>{
+  const email=req.body.email;
+  const filter={email}
+  const options = { upsert: true };
+  const updateTime = {
+    $set: {
+      lastSignInTime:req.body?.lastSignInTime
+    },
+
+  };
+  const result = await userCollection.updateOne(filter, updateTime,options );
+  res.send(result)
+})
+
 app.get('/coffee/:id',async(req,res)=>{
     const id=req.params.id;
     const query = {_id:new ObjectId(id)};
